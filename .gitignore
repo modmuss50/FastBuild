@@ -1,0 +1,15 @@
+/bin
+/out
+/run
+/.gradle
+*.iml
+/.metadata
+/.settings
+./classpath
+/libs
+/.idea
+
+FastBuild.iws
+FastBuild.ipr
+FastBuild.iml
+Thumbs.db
