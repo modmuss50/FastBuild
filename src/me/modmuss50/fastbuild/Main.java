@@ -1,11 +1,5 @@
 package me.modmuss50.fastbuild;
 
-import com.github.parker8283.bon2.BON2Impl;
-import com.github.parker8283.bon2.cli.CLIErrorHandler;
-import com.github.parker8283.bon2.cli.CLIProgressListener;
-import com.github.parker8283.bon2.data.IErrorHandler;
-import com.github.parker8283.bon2.exception.InvalidMappingsVersionException;
-import com.github.parker8283.bon2.util.BONUtils;
 import com.google.gson.Gson;
 import me.modmuss50.fastbuild.mcForge.Library;
 import me.modmuss50.fastbuild.mcForge.Version;
@@ -85,15 +79,6 @@ public class Main {
 
         String mappingsVer = forgeIdentifyer + "-shipped";
 
-        IErrorHandler errorHandler = new CLIErrorHandler();
-
-        if (!BONUtils.buildValidMappings().contains(mappingsVer)) {
-            System.err.println("The provided mappingsVer are invalid. The mappings must exist in your Gradle cache. Format is \"mcVer-forgeVer-mappingVer\"");
-            new InvalidMappingsVersionException(mappingsVer).printStackTrace();
-            System.exit(1);
-        }
-
-        BON2Impl.remap(devJar, releaseJar, mappingsVer, errorHandler, new CLIProgressListener());
         RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
 
         Instant end = Instant.now();
