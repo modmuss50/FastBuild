@@ -184,8 +184,10 @@ public class Main {
         }
         CompilationProgress progress = null;
         System.out.println("Starting build");
-        BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress);
-        System.out.println("Built the mod!");
 
+        if(!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)){
+            System.out.println("Failed to build");
+            System.exit(0);
+        }
     }
 }
