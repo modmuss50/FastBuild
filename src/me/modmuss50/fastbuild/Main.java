@@ -24,9 +24,9 @@ import java.util.List;
 
 public class Main {
 
-    public static String forgeIdentifyer = "1.7.10-10.13.2.1272";
+    public static String forgeIdentifyer = "1.7.10-10.13.4.1481-1.7.10";
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Throwable {
         Instant start = Instant.now();
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
@@ -94,6 +94,7 @@ public class Main {
         }
 
         BON2Impl.remap(devJar, releaseJar, mappingsVer, errorHandler, new CLIProgressListener());
+        RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
 
         Instant end = Instant.now();
         System.out.println("Took " + Duration.between(start, end).getSeconds() + " seconds to build");
@@ -128,7 +129,6 @@ public class Main {
 
         commandargs.add(" -warn:none");
 
-        //TODO libs
         File homeDir = new File(System.getProperty("user.home"));
         File gradledir = new File(homeDir, ".gradle");
         if (!gradledir.exists()) {
@@ -154,32 +154,20 @@ public class Main {
         try {
             BufferedReader br = new BufferedReader(
                     new FileReader(devJson));
-
             Gson gson = new Gson();
-
-            //convert the json string back to object
             Version obj = gson.fromJson(br, Version.class);
-
-
             for (Library library : obj.libraries) {
                 String[] name = library.name.split(":");
                 neededLibs.add(name[1] + "-" + name[2] + ".jar");
-                // System.out.println("Will look for " + name[1] + "-" + name[2] + ".jar");
-
             }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
         ArrayList<File> libs = new ArrayList<>();
-        System.out.println("Will look for " + neededLibs.size() + "libs");
-
         try {
             Files.walk(Paths.get(filestore.getAbsolutePath())).forEach(filePath -> {
                 if (Files.isRegularFile(filePath)) {
-
                     if (neededLibs.contains(filePath.toFile().getName())) {
                         libs.add(filePath.toFile());
                     }
@@ -189,38 +177,26 @@ public class Main {
             e.printStackTrace();
             return;
         }
-
-        System.out.println("Loaded " + libs.size() + " libs");
-
         commandargs.add(" -classpath ");
-
         String libarg = "";
-
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
-
         libarg = libarg + forgeSrc.getAbsolutePath() + ";";
-
         for (File lib : libs) {
             libarg = libarg + lib.getAbsolutePath() + ";";
         }
-
         if (libarg.length() > 0 && libarg.charAt(libarg.length() - 1) == ';') {
             libarg = libarg.substring(0, libarg.length() - 1);
         }
-
         commandargs.add(libarg);
 
         File sources = new File("src/main/java");
         commandargs.add(" " + sources.getAbsolutePath());
-
         String[] commands = new String[commandargs.size()];
         commands = commandargs.toArray(commands);
-
         StringBuilder builder = new StringBuilder();
         for (String s : commands) {
             builder.append(s);
         }
-
         CompilationProgress progress = null;
         System.out.println("Starting build");
         BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress);
