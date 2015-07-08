@@ -4,7 +4,6 @@ import immibis.bon.ClassCollection;
 import immibis.bon.IProgressListener;
 import immibis.bon.ReferenceDataCollection;
 import immibis.bon.Remapper;
-import immibis.bon.gui.Operation;
 import immibis.bon.io.ClassCollectionFactory;
 import immibis.bon.io.JarWriter;
 import immibis.bon.mcp.*;
@@ -22,8 +21,6 @@ import java.util.zip.ZipInputStream;
 
 /**
  * This code is from https://github.com/immibis/bearded-octo-nemesis
- *
- *
  */
 public class RebofUtils {
 
@@ -33,11 +30,11 @@ public class RebofUtils {
         File forgeDir = new File(gradledir, "caches/minecraft/net/minecraftforge/forge/" + forgeinfo);
         File userDev = new File(forgeDir, "forge-" + forgeinfo + "-" + "-userdev.jsr");
         if (!userDev.exists()) {
-            try{
+            try {
                 System.out.println("Downloading forge!");
                 FileUtils.copyURLToFile(new URL("http://files.minecraftforge.net/maven/net/minecraftforge/forge/" + forgeinfo + "/forge" + forgeinfo + "-userdev.jar"), userDev);
                 System.out.println("Finished downloading forge");
-            } catch (IOException ex){
+            } catch (IOException ex) {
                 ex.printStackTrace();
                 System.exit(0);
             }
@@ -45,9 +42,7 @@ public class RebofUtils {
 
         FileInputStream userdevinput = new FileInputStream(userDev);
 
-        Operation operation = Operation.ReobfuscateMod;
-
-        SrgFile var43 = null;
+        SrgFile srg = null;
         ExcFile errMsg = null;
         Map fieldsCSV = null;
         Map methodsCSV = null;
@@ -66,7 +61,7 @@ public class RebofUtils {
                     }
 
                     if (loader.getName().equals("conf/packaged.srg")) {
-                        var43 = SrgFile.read(new InputStreamReader(side, StandardCharsets.UTF_8), false);
+                        srg = SrgFile.read(new InputStreamReader(side, StandardCharsets.UTF_8), false);
                     }
 
                     if (loader.getName().equals("conf/fields.csv")) {
@@ -97,7 +92,7 @@ public class RebofUtils {
             throw fgCacheDir;
         }
 
-        if (var43 == null) {
+        if (srg == null) {
             throw new Exception("conf/packaged.srg not found in Forge jar file");
         }
 
@@ -124,7 +119,7 @@ public class RebofUtils {
         mcVer = "unknown";
         immibis.bon.mcp.MinecraftNameSet.Side side = immibis.bon.mcp.MinecraftNameSet.Side.UNIVERSAL;
         MappingLoader_MCP mappingLoaderMcp = new MappingLoader_MCP();
-        mappingLoaderMcp.load(side, mcVer, errMsg, var43, fieldsCSV, methodsCSV, new Proglistener());
+        mappingLoaderMcp.load(side, mcVer, errMsg, srg, fieldsCSV, methodsCSV, new Proglistener());
         MappingFactory.registerMCPInstance(mcVer, side, mappingLoaderMcp);
         MinecraftNameSet refNS = new MinecraftNameSet(MinecraftNameSet.Type.MCP, side, mcVer);
         HashMap refCCList = new HashMap();
@@ -140,12 +135,11 @@ public class RebofUtils {
         MinecraftNameSet.Type[] var47;
         MinecraftNameSet.Type var48;
 
-        var48 = MinecraftNameSet.Type.MCP;//TODO check this
+        var48 = MinecraftNameSet.Type.MCP;
         var47 = new MinecraftNameSet.Type[]{MinecraftNameSet.Type.SRG};
 
-
-        MinecraftNameSet var49 = new MinecraftNameSet(var48, side, mcVer);
-        ClassCollection var50 = ClassCollectionFactory.loadClassCollection(var49, dev, new Proglistener());
+        MinecraftNameSet nameSet = new MinecraftNameSet(var48, side, mcVer);
+        ClassCollection classCollection = ClassCollectionFactory.loadClassCollection(nameSet, dev, new Proglistener());
         MinecraftNameSet.Type[] var21 = var47;
         int var20 = var47.length;
 
@@ -157,15 +151,15 @@ public class RebofUtils {
 
             while (var25.hasNext()) {
                 Map.Entry e1 = (Map.Entry) var25.next();
-                if (var50.getNameSet().equals(((ClassCollection) e1.getValue()).getNameSet())) {
+                if (classCollection.getNameSet().equals(((ClassCollection) e1.getValue()).getNameSet())) {
                     remappedRefs.add(ReferenceDataCollection.fromClassCollection((ClassCollection) e1.getValue()));
                 } else {
-                    remappedRefs.add(ReferenceDataCollection.fromClassCollection(Remapper.remap((ClassCollection) e1.getValue(), MappingFactory.getMapping((MinecraftNameSet) ((ClassCollection) e1.getValue()).getNameSet(), (MinecraftNameSet) var50.getNameSet(), (IProgressListener) null), Collections.emptyList(), new Proglistener())));
+                    remappedRefs.add(ReferenceDataCollection.fromClassCollection(Remapper.remap((ClassCollection) e1.getValue(), MappingFactory.getMapping((MinecraftNameSet) ((ClassCollection) e1.getValue()).getNameSet(), (MinecraftNameSet) classCollection.getNameSet(), (IProgressListener) null), Collections.emptyList(), new Proglistener())));
                 }
             }
 
-            var50 = Remapper.remap(var50, MappingFactory.getMapping((MinecraftNameSet) var50.getNameSet(), outputNS, (IProgressListener) null), remappedRefs, new Proglistener());
-            JarWriter.write(output, var50, new Proglistener());
+            classCollection = Remapper.remap(classCollection, MappingFactory.getMapping((MinecraftNameSet) classCollection.getNameSet(), outputNS, (IProgressListener) null), remappedRefs, new Proglistener());
+            JarWriter.write(output, classCollection, new Proglistener());
         }
 
     }

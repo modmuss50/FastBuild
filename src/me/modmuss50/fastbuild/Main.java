@@ -1,6 +1,7 @@
 package me.modmuss50.fastbuild;
 
 import com.google.gson.Gson;
+import me.modmuss50.fastbuild.buildScripts.BuildInfo;
 import me.modmuss50.fastbuild.mcForge.Library;
 import me.modmuss50.fastbuild.mcForge.Version;
 import org.apache.commons.io.FileUtils;
@@ -8,9 +9,18 @@ import org.eclipse.jdt.core.compiler.CompilationProgress;
 import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.zeroturnaround.zip.ZipUtil;
 
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -18,9 +28,10 @@ import java.util.List;
 
 public class Main {
 
-    public static String forgeIdentifyer = "1.7.10-10.13.4.1481-1.7.10";
+    public String forgeIdentifyer;
 
-    public static void main(String[] args) throws Throwable {
+    public void run(BuildInfo info) throws Throwable {
+        this.forgeIdentifyer = info.forgeVersion;
         Instant start = Instant.now();
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
@@ -54,7 +65,7 @@ public class Main {
         }
 
         System.out.println("Compiling " + javaSources.size() + " java files");
-        compileJavaFile(javaSources, buildDir);
+        compileJavaFile(info);
 
         System.out.println("Creating zip file");
 
@@ -64,7 +75,7 @@ public class Main {
             FileUtils.copyDirectory(resDir, outputDir);
         }
 
-        File devJar = new File(buildDir, "dev.jar");
+        File devJar = new File(buildDir, info.projectName + "-" + info.version + "-dev.jar");
         if (devJar.exists()) {
             devJar.delete();
         }
@@ -72,14 +83,25 @@ public class Main {
 
         //OBOFED ZIP
 
-        File releaseJar = new File(buildDir, "univseral.jar");
+        File releaseJar = new File(buildDir, info.projectName + "-" + info.version + "-univseral.jar");
         if (releaseJar.exists()) {
             releaseJar.delete();
         }
 
-        String mappingsVer = forgeIdentifyer + "-shipped";
-
         RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
+
+        if (!info.devJar) {
+            devJar.delete();
+        }
+
+        File srcJar = new File(buildDir, info.projectName + "-" + info.version + "-src.jar");
+        if(srcJar.exists()){
+            srcJar.delete();
+        }
+
+        if(info.srcJar){
+            ZipUtil.pack(sources, srcJar);
+        }
 
         Instant end = Instant.now();
         System.out.println("Took " + Duration.between(start, end).getSeconds() + " seconds to build");
@@ -100,7 +122,7 @@ public class Main {
     }
 
 
-    public static void compileJavaFile(List<String> inputs, File output) {
+    public void compileJavaFile(BuildInfo info) throws MalformedURLException {
 
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
@@ -149,6 +171,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        neededLibs.add("launchwrapper-1.11.jar");
         ArrayList<File> libs = new ArrayList<>();
         try {
             Files.walk(Paths.get(filestore.getAbsolutePath())).forEach(filePath -> {
@@ -162,6 +185,61 @@ public class Main {
             e.printStackTrace();
             return;
         }
+        File libDir = new File(buildDir, "deps");
+        if (!libDir.exists()) {
+            libDir.mkdir();
+        }
+        boolean hasFixedHttps = false;
+        if (info.libraries.size() != 0) {
+            for (Library library : info.libraries) {
+                File lib = new File(libDir, library.name);
+                if (!lib.exists()) {
+                    System.out.println("Downloading library " + library.name);
+                    try {
+                        if (library.disableSSLCert && hasFixedHttps == false) {
+                            System.out.println("One or more libs has asked to disable ssl!!!");
+                            /**
+                             * This should only be used if you know what you are doing
+                             */
+                            //TODO find a better way of doing this, this is BAD!!!
+                            final TrustManager[] trustAllCertificates = new TrustManager[]{
+                                    new X509TrustManager() {
+                                        @Override
+                                        public X509Certificate[] getAcceptedIssuers() {
+                                            return null; // Not relevant.
+                                        }
+
+                                        @Override
+                                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                                            // Do nothing. Just allow them all.
+                                        }
+
+                                        @Override
+                                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                                            // Do nothing. Just allow them all.
+                                        }
+                                    }
+                            };
+
+                            try {
+                                SSLContext sc = SSLContext.getInstance("SSL");
+                                sc.init(null, trustAllCertificates, new SecureRandom());
+                                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+                            } catch (GeneralSecurityException e) {
+                                throw new ExceptionInInitializerError(e);
+                            }
+                        }
+                        FileUtils.copyURLToFile(new URL(library.url), lib);
+                    } catch (IOException e) {
+                        System.out.println("Failed to download a library!");
+                        e.printStackTrace();
+                        System.exit(0);
+                    }
+                }
+                libs.add(lib);
+            }
+        }
+
         commandargs.add(" -classpath ");
         String libarg = "";
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
@@ -185,7 +263,7 @@ public class Main {
         CompilationProgress progress = null;
         System.out.println("Starting build");
 
-        if(!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)){
+        if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
             System.out.println("Failed to build");
             System.exit(0);
         }
