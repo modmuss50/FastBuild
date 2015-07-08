@@ -1,5 +1,6 @@
 package me.modmuss50.fastbuild;
 
+import com.google.common.base.Throwables;
 import com.google.gson.Gson;
 import me.modmuss50.fastbuild.buildScripts.BuildInfo;
 import me.modmuss50.fastbuild.mcForge.Library;
@@ -24,6 +25,7 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Main {
@@ -129,6 +131,8 @@ public class Main {
         folder.delete();
     }
 
+    public static final File CWD = new File( "." );
+
 
     public void compileJavaFile(BuildInfo info) throws IOException {
 
@@ -140,11 +144,17 @@ public class Main {
         outputDir.mkdir();
 
         List<String> commandargs = new ArrayList<String>();
-        commandargs.add(" -d " + outputDir.getAbsolutePath());
+        commandargs.add("java");
 
-        commandargs.add(" -1.7");
+        commandargs.add("-jar");
+        commandargs.add("ecj-4.5.jar");
 
-        commandargs.add(" -warn:none");
+        commandargs.add("-d");
+        commandargs.add(outputDir.getAbsolutePath());
+
+        commandargs.add("-1.7");
+
+        commandargs.add("-warn:none");
 
         File homeDir = new File(System.getProperty("user.home"));
         File gradledir = new File(homeDir, ".gradle");
@@ -262,8 +272,10 @@ public class Main {
                 libs.add(lib);
             }
         }
-        commandargs.add(" -O -time -progress -noExit");
-        commandargs.add(" -classpath ");
+        commandargs.add("-O");
+        commandargs.add("-time");
+        commandargs.add("-progress");
+        commandargs.add("-noExit");
 
         String libarg = "";
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
@@ -281,11 +293,14 @@ public class Main {
         if (libarg.length() > 0 && libarg.charAt(libarg.length() - 1) == ';') {
             libarg = libarg.substring(0, libarg.length() - 1);
         }
+        commandargs.add("-classpath");
         commandargs.add(libarg);
+
 
        // File sources = new File("src/main/java");
         File tempsrc = new File(buildDir, "tempsrc");
-        commandargs.add(" " + tempsrc.getAbsolutePath());
+        commandargs.add(tempsrc.getAbsolutePath());
+
         String[] commands = new String[commandargs.size()];
         commands = commandargs.toArray(commands);
         StringBuilder builder = new StringBuilder();
@@ -295,9 +310,78 @@ public class Main {
         CompilationProgress progress = null;
         System.out.println("Starting build");
         //System.out.println(builder.toString());
-        if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
+
+
+        System.out.println(CWD.getAbsolutePath());
+
+        try {
+            runProcess(CWD,commandargs);
+        } catch (Exception e) {
             System.out.println("Failed to build");
+            e.printStackTrace();
             System.exit(1);
+        }
+
+    }
+
+    private String getPath(){
+        String absolutePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+        absolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
+        absolutePath = absolutePath.replaceAll("%20"," "); // Surely need to do this here
+        return absolutePath;
+    }
+
+    public static int runProcess(File workDir, List<String> command) throws Exception
+    {
+        ProcessBuilder pb = new ProcessBuilder( command );
+        pb.directory( workDir );
+        pb.environment().put( "JAVA_HOME", System.getProperty( "java.home" ) );
+        if ( !pb.environment().containsKey( "MAVEN_OPTS" ) )
+        {
+            pb.environment().put( "MAVEN_OPTS", "-Xmx1024M" );
+        }
+
+        final Process ps = pb.start();
+
+        new Thread( new StreamRedirector( ps.getInputStream(), System.out ) ).start();
+        new Thread( new StreamRedirector( ps.getErrorStream(), System.err ) ).start();
+
+        int status = ps.waitFor();
+
+        if ( status != 0 )
+        {
+            throw new RuntimeException( "Error running command, return status !=0: " + command.toString() );
+        }
+
+        return status;
+    }
+
+    private static class StreamRedirector implements Runnable
+    {
+
+        private final InputStream in;
+        private final PrintStream out;
+
+        public StreamRedirector(InputStream in, PrintStream out) {
+            this.in = in;
+            this.out = out;
+        }
+
+        @Override
+        public void run()
+        {
+            BufferedReader br = new BufferedReader( new InputStreamReader( in ) );
+            try
+            {
+                String line;
+                while ( ( line = br.readLine() ) != null )
+                {
+                    out.println( line );
+                }
+            } catch ( IOException ex )
+            {
+                throw Throwables.propagate(ex);
+            }
         }
     }
 }
