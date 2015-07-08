@@ -52,9 +52,10 @@ public class Main {
         if(resDir.exists()){
             FileUtils.copyDirectory(resDir, tempsrc);
         }
-        if(!jarOut.exists()){
-            jarOut.mkdir();
+        if(jarOut.exists()){
+            deleteFolder(jarOut);
         }
+        jarOut.mkdir();
 
         ArrayList<String> javaSources = new ArrayList<>();
         try {
@@ -133,7 +134,9 @@ public class Main {
 
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
-        outputDir.delete();
+        if(outputDir.exists()){
+            deleteFolder(outputDir);
+        }
         outputDir.mkdir();
 
         List<String> commandargs = new ArrayList<String>();
