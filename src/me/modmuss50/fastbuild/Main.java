@@ -166,6 +166,19 @@ public class Main {
         }
 
         File filestore = new File(gradledir, "caches/artifacts-24/filestore");
+        if(!filestore.exists()){
+            if(new File(gradledir, "caches/modules-2/files-2.1").exists()){
+                filestore = new File(gradledir, "caches");
+            } else {
+                filestore = new File(gradledir, "caches");
+                if(!filestore.exists()){
+                    System.out.println("Could not find Gradle caches folder!");
+                    System.exit(1);
+                } else {
+                    System.out.println("The system could not find the filestore, it will try and look, this will take a bit longer!");
+                }
+            }
+        }
 
         ArrayList<String> neededLibs = new ArrayList<>();
         try {
@@ -249,8 +262,9 @@ public class Main {
                 libs.add(lib);
             }
         }
-
+        commandargs.add(" -O -time -progress -noExit");
         commandargs.add(" -classpath ");
+
         String libarg = "";
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
         if(!forgeSrc.exists()){
@@ -280,6 +294,7 @@ public class Main {
         }
         CompilationProgress progress = null;
         System.out.println("Starting build");
+        //System.out.println(builder.toString());
 
         if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
             System.out.println("Failed to build");

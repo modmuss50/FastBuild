@@ -32,7 +32,7 @@ public class RebofUtils {
         if (!userDev.exists()) {
             try {
                 System.out.println("Downloading forge!");
-                FileUtils.copyURLToFile(new URL("http://files.minecraftforge.net/maven/net/minecraftforge/forge/" + forgeinfo + "/forge" + forgeinfo + "-userdev.jar"), userDev);
+                FileUtils.copyURLToFile(new URL("http://files.minecraftforge.net/maven/net/minecraftforge/forge/" + forgeinfo + "/forge-" + forgeinfo + "-userdev.jar"), userDev);
                 System.out.println("Finished downloading forge");
             } catch (IOException ex) {
                 ex.printStackTrace();
