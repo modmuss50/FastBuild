@@ -130,7 +130,7 @@ public class Main {
     }
 
 
-    public void compileJavaFile(BuildInfo info) throws MalformedURLException {
+    public void compileJavaFile(BuildInfo info) throws IOException {
 
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
@@ -274,9 +274,9 @@ public class Main {
                 System.exit(1);
             }
         }
-        libarg = libarg + forgeSrc.getAbsolutePath() + ";";
+        libarg = libarg + forgeSrc.getCanonicalPath() + ";";
         for (File lib : libs) {
-            libarg = libarg + lib.getAbsolutePath() + ";";
+            libarg = libarg + lib.getCanonicalPath() + ";";
         }
         if (libarg.length() > 0 && libarg.charAt(libarg.length() - 1) == ';') {
             libarg = libarg.substring(0, libarg.length() - 1);
@@ -295,7 +295,6 @@ public class Main {
         CompilationProgress progress = null;
         System.out.println("Starting build");
         //System.out.println(builder.toString());
-
         if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
             System.out.println("Failed to build");
             System.exit(1);
