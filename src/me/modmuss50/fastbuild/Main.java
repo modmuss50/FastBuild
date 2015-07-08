@@ -35,23 +35,30 @@ public class Main {
         Instant start = Instant.now();
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
+        File tempsrc = new File(buildDir, "tempsrc");
+        File resDir = new File("src/main/resources");
         File sources = new File("src/main/java");
+        File jarOut = new File(buildDir, "libs");
         if (!buildDir.exists()) {
             buildDir.mkdir();
-        }
-        if (outputDir.exists()) {
-            deleteFolder(outputDir);
         }
         outputDir.mkdir();
         if (!sources.exists()) {
             System.out.println("Could not find mod sources!");
             return;
         }
+        tempsrc.mkdir();
+        FileUtils.copyDirectory(sources, tempsrc);
+        if(resDir.exists()){
+            FileUtils.copyDirectory(resDir, tempsrc);
+        }
+        if(!jarOut.exists()){
+            jarOut.mkdir();
+        }
 
         ArrayList<String> javaSources = new ArrayList<>();
-
         try {
-            Files.walk(Paths.get(sources.getAbsolutePath())).forEach(filePath -> {
+            Files.walk(Paths.get(tempsrc.getAbsolutePath())).forEach(filePath -> {
                 if (Files.isRegularFile(filePath)) {
                     if (filePath.toFile().getName().endsWith(".java")) {
                         javaSources.add(filePath.toString() + " ");
@@ -63,46 +70,46 @@ public class Main {
             e.printStackTrace();
             return;
         }
-
         System.out.println("Compiling " + javaSources.size() + " java files");
         compileJavaFile(info);
 
-        System.out.println("Creating zip file");
+        System.out.println("Creating jar's file");
 
-        File resDir = new File("src/main/resources");
         if (resDir.exists()) {
             System.out.println("Copying the resources!");
             FileUtils.copyDirectory(resDir, outputDir);
         }
 
-        File devJar = new File(buildDir, info.projectName + "-" + info.version + "-dev.jar");
+        File devJar = new File(jarOut, info.projectName + "-" + info.version + "-dev.jar");
         if (devJar.exists()) {
             devJar.delete();
         }
         ZipUtil.pack(outputDir, devJar);
 
-        //OBOFED ZIP
+        if(info.uniJar){
+            File releaseJar = new File(jarOut, info.projectName + "-" + info.version + "-univseral.jar");
+            if (releaseJar.exists()) {
+                releaseJar.delete();
+            }
 
-        File releaseJar = new File(buildDir, info.projectName + "-" + info.version + "-univseral.jar");
-        if (releaseJar.exists()) {
-            releaseJar.delete();
+            RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
         }
-
-        RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
 
         if (!info.devJar) {
             devJar.delete();
         }
 
-        File srcJar = new File(buildDir, info.projectName + "-" + info.version + "-src.jar");
+        File srcJar = new File(jarOut, info.projectName + "-" + info.version + "-src.jar");
         if(srcJar.exists()){
             srcJar.delete();
         }
 
         if(info.srcJar){
-            ZipUtil.pack(sources, srcJar);
+            ZipUtil.pack(tempsrc, srcJar);
         }
 
+        deleteFolder(tempsrc);
+        deleteFolder(outputDir);
         Instant end = Instant.now();
         System.out.println("Took " + Duration.between(start, end).getSeconds() + " seconds to build");
     }
@@ -140,19 +147,19 @@ public class Main {
         File gradledir = new File(homeDir, ".gradle");
         if (!gradledir.exists()) {
             System.out.println("You need to setup a dev env to use this using gradle!!!");
-            System.exit(0);
+            System.exit(1);
         }
 
         File forgeDir = new File(gradledir, "caches/minecraft/net/minecraftforge/forge/" + forgeIdentifyer);
         if (!forgeDir.exists()) {
             System.out.println("You need to setup a dev env to use this using gradle!!!");
-            System.exit(0);
+            System.exit(1);
         }
 
         File devJson = new File(forgeDir, "unpacked/dev.json");
         if (!devJson.exists()) {
             System.out.println("Could not find a dev.json file");
-            System.exit(0);
+            System.exit(1);
         }
 
         File filestore = new File(gradledir, "caches/artifacts-24/filestore");
@@ -233,7 +240,7 @@ public class Main {
                     } catch (IOException e) {
                         System.out.println("Failed to download a library!");
                         e.printStackTrace();
-                        System.exit(0);
+                        System.exit(1);
                     }
                 }
                 libs.add(lib);
@@ -243,6 +250,13 @@ public class Main {
         commandargs.add(" -classpath ");
         String libarg = "";
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
+        if(!forgeSrc.exists()){
+            forgeSrc = new File(forgeDir, "forgeBin-" + forgeIdentifyer + ".jar");
+            if(!forgeSrc.exists()){
+                System.out.println("You need to setup gradle!");
+                System.exit(1);
+            }
+        }
         libarg = libarg + forgeSrc.getAbsolutePath() + ";";
         for (File lib : libs) {
             libarg = libarg + lib.getAbsolutePath() + ";";
@@ -252,8 +266,9 @@ public class Main {
         }
         commandargs.add(libarg);
 
-        File sources = new File("src/main/java");
-        commandargs.add(" " + sources.getAbsolutePath());
+       // File sources = new File("src/main/java");
+        File tempsrc = new File(buildDir, "tempsrc");
+        commandargs.add(" " + tempsrc.getAbsolutePath());
         String[] commands = new String[commandargs.size()];
         commands = commandargs.toArray(commands);
         StringBuilder builder = new StringBuilder();
@@ -265,7 +280,7 @@ public class Main {
 
         if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
             System.out.println("Failed to build");
-            System.exit(0);
+            System.exit(1);
         }
     }
 }

@@ -14,4 +14,5 @@ public class BuildInfo {
 
     public boolean devJar;
     public boolean srcJar;
+    public boolean uniJar = true;
 }
