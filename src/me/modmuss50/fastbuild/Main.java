@@ -7,7 +7,6 @@ import me.modmuss50.fastbuild.mcForge.Library;
 import me.modmuss50.fastbuild.mcForge.Version;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.compiler.CompilationProgress;
-import org.eclipse.jdt.core.compiler.batch.BatchCompiler;
 import org.zeroturnaround.zip.ZipUtil;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -15,7 +14,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -25,7 +23,6 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class Main {
@@ -51,10 +48,10 @@ public class Main {
         }
         tempsrc.mkdir();
         FileUtils.copyDirectory(sources, tempsrc);
-        if(resDir.exists()){
+        if (resDir.exists()) {
             FileUtils.copyDirectory(resDir, tempsrc);
         }
-        if(jarOut.exists()){
+        if (jarOut.exists()) {
             deleteFolder(jarOut);
         }
         jarOut.mkdir();
@@ -89,7 +86,7 @@ public class Main {
         }
         ZipUtil.pack(outputDir, devJar);
 
-        if(info.uniJar){
+        if (info.uniJar) {
             File releaseJar = new File(jarOut, info.projectName + "-" + info.version + "-univseral.jar");
             if (releaseJar.exists()) {
                 releaseJar.delete();
@@ -103,11 +100,11 @@ public class Main {
         }
 
         File srcJar = new File(jarOut, info.projectName + "-" + info.version + "-src.jar");
-        if(srcJar.exists()){
+        if (srcJar.exists()) {
             srcJar.delete();
         }
 
-        if(info.srcJar){
+        if (info.srcJar) {
             ZipUtil.pack(tempsrc, srcJar);
         }
 
@@ -131,14 +128,14 @@ public class Main {
         folder.delete();
     }
 
-    public static final File CWD = new File( "." );
+    public static final File CWD = new File(".");
 
 
     public void compileJavaFile(BuildInfo info) throws IOException {
 
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
-        if(outputDir.exists()){
+        if (outputDir.exists()) {
             deleteFolder(outputDir);
         }
         outputDir.mkdir();
@@ -176,12 +173,12 @@ public class Main {
         }
 
         File filestore = new File(gradledir, "caches/artifacts-24/filestore");
-        if(!filestore.exists()){
-            if(new File(gradledir, "caches/modules-2/files-2.1").exists()){
+        if (!filestore.exists()) {
+            if (new File(gradledir, "caches/modules-2/files-2.1").exists()) {
                 filestore = new File(gradledir, "caches");
             } else {
                 filestore = new File(gradledir, "caches");
-                if(!filestore.exists()){
+                if (!filestore.exists()) {
                     System.out.println("Could not find Gradle caches folder!");
                     System.exit(1);
                 } else {
@@ -279,9 +276,9 @@ public class Main {
 
         String libarg = "";
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
-        if(!forgeSrc.exists()){
+        if (!forgeSrc.exists()) {
             forgeSrc = new File(forgeDir, "forgeBin-" + forgeIdentifyer + ".jar");
-            if(!forgeSrc.exists()){
+            if (!forgeSrc.exists()) {
                 System.out.println("You need to setup gradle!");
                 System.exit(1);
             }
@@ -297,25 +294,18 @@ public class Main {
         commandargs.add(libarg);
 
 
-       // File sources = new File("src/main/java");
+        // File sources = new File("src/main/java");
         File tempsrc = new File(buildDir, "tempsrc");
         commandargs.add(tempsrc.getAbsolutePath());
 
-        String[] commands = new String[commandargs.size()];
-        commands = commandargs.toArray(commands);
-        StringBuilder builder = new StringBuilder();
-        for (String s : commands) {
-            builder.append(s);
-        }
-        CompilationProgress progress = null;
+
+        System.out.println(commandargs.toString());
+
+        System.exit(-1);
+
         System.out.println("Starting build");
-        //System.out.println(builder.toString());
-
-
-        System.out.println(CWD.getAbsolutePath());
-
         try {
-            runProcess(CWD,commandargs);
+            runProcess(CWD, commandargs);
         } catch (Exception e) {
             System.out.println("Failed to build");
             e.printStackTrace();
@@ -324,40 +314,26 @@ public class Main {
 
     }
 
-    private String getPath(){
-        String absolutePath = getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
-        absolutePath = absolutePath.substring(0, absolutePath.lastIndexOf("/"));
-        absolutePath = absolutePath.replaceAll("%20"," "); // Surely need to do this here
-        return absolutePath;
-    }
-
-    public static int runProcess(File workDir, List<String> command) throws Exception
-    {
-        ProcessBuilder pb = new ProcessBuilder( command );
-        pb.directory( workDir );
-        pb.environment().put( "JAVA_HOME", System.getProperty( "java.home" ) );
-        if ( !pb.environment().containsKey( "MAVEN_OPTS" ) )
-        {
-            pb.environment().put( "MAVEN_OPTS", "-Xmx1024M" );
-        }
+    public static int runProcess(File workDir, List<String> command) throws Exception {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(workDir);
+        pb.environment().put("JAVA_HOME", System.getProperty("java.home"));
 
         final Process ps = pb.start();
 
-        new Thread( new StreamRedirector( ps.getInputStream(), System.out ) ).start();
-        new Thread( new StreamRedirector( ps.getErrorStream(), System.err ) ).start();
+        new Thread(new StreamRedirector(ps.getInputStream(), System.out)).start();
+        new Thread(new StreamRedirector(ps.getErrorStream(), System.err)).start();
 
         int status = ps.waitFor();
 
-        if ( status != 0 )
-        {
-            throw new RuntimeException( "Error running command, return status !=0: " + command.toString() );
+        if (status != 0) {
+            throw new RuntimeException("Error running command, return status !=0: " + command.toString());
         }
 
         return status;
     }
 
-    private static class StreamRedirector implements Runnable
-    {
+    private static class StreamRedirector implements Runnable {
 
         private final InputStream in;
         private final PrintStream out;
@@ -368,18 +344,14 @@ public class Main {
         }
 
         @Override
-        public void run()
-        {
-            BufferedReader br = new BufferedReader( new InputStreamReader( in ) );
-            try
-            {
+        public void run() {
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            try {
                 String line;
-                while ( ( line = br.readLine() ) != null )
-                {
-                    out.println( line );
+                while ((line = br.readLine()) != null) {
+                    out.println(line);
                 }
-            } catch ( IOException ex )
-            {
+            } catch (IOException ex) {
                 throw Throwables.propagate(ex);
             }
         }
