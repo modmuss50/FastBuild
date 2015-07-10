@@ -43,6 +43,9 @@ public class FastBuild {
 			info.devJar = true;
 			info.srcJar = false;
 
+            info.manifest = new ArrayList<>();
+            info.manifest.add("Manifest-Version: 1.0");
+
 			Gson gson = new GsonBuilder().setPrettyPrinting().create();
 			String json = gson.toJson(info);
 			FileWriter writer = new FileWriter(buildinfo);

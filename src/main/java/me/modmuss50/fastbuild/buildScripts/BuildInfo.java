@@ -8,9 +8,12 @@ public class BuildInfo {
 	public String projectName;
 	public String version;
 
+    public boolean useFoge = true;
 	public String forgeVersion;
 
 	public List<Library> libraries;
+    public String bytecodeVersion = "1.7";
+    public List<String> manifest;
 
 	public boolean devJar;
 	public boolean srcJar;

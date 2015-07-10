@@ -1,0 +1,48 @@
+{
+  "projectName": "FastBuild",
+  "version": "1.0.0",
+  "bytecodeVersion": "1.8",
+  "useFoge": false,
+  "libraries": [
+    {
+      "name": "BON.jar",
+      "url": "https://dl.dropbox.com/u/2944265/mods/BON.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "commons-io-2.4.jar",
+      "url": "http://central.maven.org/maven2/commons-io/commons-io/2.4/commons-io-2.4.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "ecj-4.4.2.jar",
+      "url": "http://central.maven.org/maven2/org/eclipse/jdt/core/compiler/ecj/4.4.2/ecj-4.4.2.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "gson-2.3.1.jar",
+      "url": "http://central.maven.org/maven2/com/google/code/gson/gson/2.3.1/gson-2.3.1.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "slf4j-api-1.7.12.jar",
+      "url": "http://central.maven.org/maven2/org/slf4j/slf4j-api/1.7.12/slf4j-api-1.7.12.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "slf4j-simple-1.7.12.jar",
+      "url": "http://central.maven.org/maven2/org/slf4j/slf4j-simple/1.7.12/slf4j-simple-1.7.12.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "zt-zip-1.8.jar",
+      "url": "http://central.maven.org/maven2/org/zeroturnaround/zt-zip/1.8/zt-zip-1.8.jar",
+      "copyToJar": true
+    }
+  ],
+  "manifest": [
+    "Manifest-Version: 1.0",
+    "Main-Class: me.modmuss50.fastbuild.FastBuild"
+  ],
+  "srcJar": true
+}

@@ -34,6 +34,8 @@ public class Main {
 
 	public String forgeIdentifyer;
 
+    ArrayList<File> libFiles = new ArrayList<>();
+
 	public static void deleteFolder(File folder) {
 		File[] files = folder.listFiles();
 		if (files != null) { //some JVMs return null for empty dirs
@@ -62,7 +64,7 @@ public class Main {
 		}
 		outputDir.mkdir();
 		if (!sources.exists()) {
-			System.out.println("Could not find mod sources!");
+			System.out.println("Could not find sources!");
 			return;
 		}
 		tempsrc.mkdir();
@@ -75,21 +77,6 @@ public class Main {
 		}
 		jarOut.mkdir();
 
-		ArrayList<String> javaSources = new ArrayList<>();
-		try {
-			Files.walk(Paths.get(tempsrc.getAbsolutePath())).forEach(filePath -> {
-				if (Files.isRegularFile(filePath)) {
-					if (filePath.toFile().getName().endsWith(".java")) {
-						javaSources.add(filePath.toString() + " ");
-					}
-
-				}
-			});
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
-		System.out.println("Compiling " + javaSources.size() + " java files");
 		compileJavaFile(info);
 
 		System.out.println("Creating jar's file");
@@ -99,13 +86,35 @@ public class Main {
 			FileUtils.copyDirectory(resDir, outputDir);
 		}
 
+        for(Library library : info.libraries){
+            if(library.copyToJar){
+                for(File libFile : libFiles){
+                    if(libFile.getName().equals(library.name)){
+                        ZipUtil.unpack(libFile, outputDir);
+                    }
+                }
+            }
+        }
+
+        if(info.manifest != null && !info.manifest.isEmpty()){
+            File manifestFile = new File(outputDir, "META-INF/MANIFEST.MF");
+            if(manifestFile.exists()){
+                manifestFile.delete();
+            }
+            PrintWriter out = new PrintWriter(manifestFile);
+            for(String string : info.manifest){
+                out.println(string);
+            }
+            out.close();
+        }
+
 		File devJar = new File(jarOut, info.projectName + "-" + info.version + "-dev.jar");
 		if (devJar.exists()) {
 			devJar.delete();
 		}
 		ZipUtil.pack(outputDir, devJar);
 
-		if (info.uniJar) {
+		if (info.uniJar && info.useFoge) {
 			File releaseJar = new File(jarOut, info.projectName + "-" + info.version + "-univseral.jar");
 			if (releaseJar.exists()) {
 				releaseJar.delete();
@@ -114,12 +123,17 @@ public class Main {
 			RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
 		}
 
-		if (!info.devJar) {
+        if(!info.useFoge){
+            File jarFile = new File(jarOut, info.projectName + "-" + info.version + ".jar");
+            FileUtils.copyFile(devJar, jarFile);
+        }
+
+		if (!info.devJar || !info.useFoge) {
 			devJar.delete();
 		}
 
 		File srcJar = new File(jarOut, info.projectName + "-" + info.version + "-src.jar");
-		if (srcJar.exists()) {
+		if (srcJar.exists() || !info.useFoge) {
 			srcJar.delete();
 		}
 
@@ -145,70 +159,76 @@ public class Main {
 		List<String> commandargs = new ArrayList<String>();
 		commandargs.add(" -d " + outputDir.getAbsolutePath());
 
-		commandargs.add(" -1.7");
+		commandargs.add(" -" + info.bytecodeVersion);
 
 		commandargs.add(" -warn:none");
 
 		File homeDir = new File(System.getProperty("user.home"));
-		File gradledir = new File(homeDir, ".gradle");
-		if (!gradledir.exists()) {
-			throw new Exception("Could not find a gradle caches folder");
-		}
 
-		File forgeDir = new File(gradledir, "caches/minecraft/net/minecraftforge/forge/" + forgeIdentifyer);
-		if (!forgeDir.exists()) {
-			System.out.println("You need to setup a dev env to use this using gradle!!!");
-			throw new Exception("Could not find " + forgeIdentifyer + " gradle files");
-		}
 
-		File devJson = new File(forgeDir, "unpacked/dev.json");
-		if (!devJson.exists()) {
-			System.out.println("Could not find a dev.json file");
-			throw new FileNotFoundException("coudl not find dev.json");
-		}
+        File forgeDir = null;
 
-		File filestore = new File(gradledir, "caches/artifacts-24/filestore");
-		if (!filestore.exists()) {
-			if (new File(gradledir, "caches/modules-2/files-2.1").exists()) {
-				filestore = new File(gradledir, "caches");
-			} else {
-				filestore = new File(gradledir, "caches");
-				if (!filestore.exists()) {
-					throw new FileNotFoundException("Could not find Gradle caches folder!");
-				} else {
-					System.out.println("The system could not find the filestore, it will try and look, this will take a bit longer!");
-				}
-			}
-		}
+        if(info.useFoge){
+            File gradledir = new File(homeDir, ".gradle");
+            if (!gradledir.exists()) {
+                throw new Exception("Could not find a gradle caches folder");
+            }
 
-		ArrayList<String> neededLibs = new ArrayList<>();
-		try {
-			BufferedReader br = new BufferedReader(
-					new FileReader(devJson));
-			Gson gson = new Gson();
-			Version obj = gson.fromJson(br, Version.class);
-			for (Library library : obj.libraries) {
-				String[] name = library.name.split(":");
-				neededLibs.add(name[1] + "-" + name[2] + ".jar");
-			}
+            forgeDir = new File(gradledir, "caches/minecraft/net/minecraftforge/forge/" + forgeIdentifyer);
+            if (!forgeDir.exists()) {
+                System.out.println("You need to setup a dev env to use this using gradle!!!");
+                throw new Exception("Could not find " + forgeIdentifyer + " gradle files");
+            }
 
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		neededLibs.add("launchwrapper-1.11.jar");
-		ArrayList<File> libs = new ArrayList<>();
-		try {
-			Files.walk(Paths.get(filestore.getAbsolutePath())).forEach(filePath -> {
-				if (Files.isRegularFile(filePath)) {
-					if (neededLibs.contains(filePath.toFile().getName())) {
-						libs.add(filePath.toFile());
-					}
-				}
-			});
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
+            File devJson = new File(forgeDir, "unpacked/dev.json");
+            if (!devJson.exists()) {
+                System.out.println("Could not find a dev.json file");
+                throw new FileNotFoundException("coudl not find dev.json");
+            }
+
+            File filestore = new File(gradledir, "caches/artifacts-24/filestore");
+            if (!filestore.exists()) {
+                if (new File(gradledir, "caches/modules-2/files-2.1").exists()) {
+                    filestore = new File(gradledir, "caches");
+                } else {
+                    filestore = new File(gradledir, "caches");
+                    if (!filestore.exists()) {
+                        throw new FileNotFoundException("Could not find Gradle caches folder!");
+                    } else {
+                        System.out.println("The system could not find the filestore, it will try and look, this will take a bit longer!");
+                    }
+                }
+            }
+            ArrayList<String> neededLibs = new ArrayList<>();
+            try {
+                BufferedReader br = new BufferedReader(
+                        new FileReader(devJson));
+                Gson gson = new Gson();
+                Version obj = gson.fromJson(br, Version.class);
+                for (Library library : obj.libraries) {
+                    String[] name = library.name.split(":");
+                    neededLibs.add(name[1] + "-" + name[2] + ".jar");
+                }
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            neededLibs.add("launchwrapper-1.11.jar");
+
+            try {
+                Files.walk(Paths.get(filestore.getAbsolutePath())).forEach(filePath -> {
+                    if (Files.isRegularFile(filePath)) {
+                        if (neededLibs.contains(filePath.toFile().getName())) {
+                            libFiles.add(filePath.toFile());
+                        }
+                    }
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+        }
+
 		File libDir = new File(buildDir, "deps");
 		if (!libDir.exists()) {
 			libDir.mkdir();
@@ -221,7 +241,7 @@ public class Main {
 					System.out.println("Downloading library " + library.name);
 					try {
 						if (library.disableSSLCert && hasFixedHttps == false) {
-							System.out.println("One or more libs has asked to disable ssl!!!");
+							System.out.println("One or more libFiles has asked to disable ssl!!!");
 							/**
 							 * This should only be used if you know what you are doing
 							 */
@@ -259,33 +279,36 @@ public class Main {
 						e.printStackTrace();
 					}
 				}
-				libs.add(lib);
+				libFiles.add(lib);
 			}
 		}
 		commandargs.add(" -O -time -progress -noExit");
 		commandargs.add(" -classpath ");
 
+        String seperator = ":";
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            seperator = ";";
+        }
 		StringBuffer libarg = new StringBuffer();
-		File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
-		if (!forgeSrc.exists()) {
-			forgeSrc = new File(forgeDir, "forgeBin-" + forgeIdentifyer + ".jar");
-			if (!forgeSrc.exists()) {
-				System.out.println("You need to setup gradle!");
-				System.exit(1);
-			}
-		}
 
-		String seperator = ":";
-		if (System.getProperty("os.name").startsWith("Windows")) {
-			seperator = ";";
-		}
-		libarg.append(forgeSrc.getAbsolutePath() + seperator);
-		for (File lib : libs) {
+        if(info.useFoge){
+            if(forgeDir == null){
+                throw new NullPointerException("Could not find forge!");
+            }
+            File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
+            if (!forgeSrc.exists()) {
+                forgeSrc = new File(forgeDir, "forgeBin-" + forgeIdentifyer + ".jar");
+                if (!forgeSrc.exists()) {
+                    System.out.println("You need to setup gradle!");
+                    System.exit(1);
+                }
+            }
+            libarg.append(forgeSrc.getAbsolutePath() + seperator);
+        }
+
+		for (File lib : libFiles) {
 			libarg.append(lib.getAbsolutePath() + seperator);
 		}
-//        if (libarg.length() > 0 && libarg.charAt(libarg.length() - 1) == seperator.toCharArray()[0]) {
-//            libarg = libarg.substring(0, libarg.length() - 1);
-//        }
 		commandargs.add(libarg.toString());
 
 		File tempsrc = new File(buildDir, "tempsrc");
@@ -298,12 +321,8 @@ public class Main {
 		}
 		CompilationProgress progress = null;
 		System.out.println("Starting build");
-		//System.out.println(builder.toString());
 		if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
-
 			throw new Exception("Failed to build");
 		}
-
 	}
-
 }
