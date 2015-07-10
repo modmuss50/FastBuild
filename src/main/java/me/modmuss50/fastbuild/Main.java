@@ -72,6 +72,9 @@ public class Main {
 		if (!buildDir.exists()) {
 			buildDir.mkdir();
 		}
+        if(outputDir.exists()){
+            deleteFolder(outputDir);
+        }
 		outputDir.mkdir();
 		if (!sources.exists()) {
 			System.out.println("Could not find sources!");
@@ -107,7 +110,11 @@ public class Main {
         }
 
         if(info.manifest != null && !info.manifest.isEmpty()){
-            File manifestFile = new File(outputDir, "META-INF/MANIFEST.MF");
+            File metaInf = new File(outputDir, "META-INF");
+            if(!metaInf.exists()){
+                metaInf.mkdir();
+            }
+            File manifestFile = new File(metaInf, "MANIFEST.MF");
             if(manifestFile.exists()){
                 manifestFile.delete();
             }
