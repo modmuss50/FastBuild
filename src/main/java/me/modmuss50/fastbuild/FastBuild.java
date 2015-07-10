@@ -66,9 +66,16 @@ public class FastBuild {
         if(isJenkins){
             String buildNumber = System.getenv("BUILD_NUMBER");
             if(buildinfo != null){
-                info.version.replaceAll("%BUILD%", buildNumber);
+                info.version = info.version.replaceAll("%BUILD%", buildNumber);
+            } else {
+                throw new NullPointerException("Could not find the build number from jenkins, are you sure this is jenkins?");
             }
         }
-		main.run(info);
+
+        System.out.println("Building " + info.projectName + " version " + info.version);
+        if(isJenkins){
+            System.out.println("This is a jenkins build!");
+        }
+        main.run(info);
 	}
 }
