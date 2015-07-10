@@ -1,6 +1,6 @@
 {
   "projectName": "FastBuild",
-  "version": "1.0.0",
+  "version": "0.1.%BUILD%",
   "bytecodeVersion": "1.8",
   "useFoge": false,
   "libraries": [

@@ -14,7 +14,14 @@ import java.util.ArrayList;
 
 public class FastBuild {
 
+    public static boolean isJenkins = false;
+
 	public static void main(String[] args) throws Throwable {
+        for(String arg : args){
+            if(arg.endsWith("-jenkins")){
+                isJenkins = true;
+            }
+        }
 		Main main = new Main();
 		File buildinfo = new File("build.json");
 		BuildInfo info = null;
@@ -56,6 +63,12 @@ public class FastBuild {
 		if (info == null) {
 			throw new Exception("Could not load the json file");
 		}
+        if(isJenkins){
+            String buildNumber = System.getenv("BUILD_NUMBER");
+            if(buildinfo != null){
+                info.version.replaceAll("%BUILD%", buildNumber);
+            }
+        }
 		main.run(info);
 	}
 }

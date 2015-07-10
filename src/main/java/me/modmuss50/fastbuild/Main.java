@@ -20,7 +20,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
 import java.security.SecureRandom;
@@ -35,6 +37,8 @@ public class Main {
 	public String forgeIdentifyer;
 
     ArrayList<File> libFiles = new ArrayList<>();
+
+    File fastBuildCache;
 
 	public static void deleteFolder(File folder) {
 		File[] files = folder.listFiles();
@@ -59,6 +63,12 @@ public class Main {
 		File resDir = new File("src/main/resources");
 		File sources = new File("src/main/java");
 		File jarOut = new File(buildDir, "libs");
+        File homeDir = new File(System.getProperty("user.home"));
+        fastBuildCache = new File(homeDir, ".fastbuild");
+        if(!fastBuildCache.exists()){
+            fastBuildCache.mkdir();
+        }
+
 		if (!buildDir.exists()) {
 			buildDir.mkdir();
 		}
@@ -229,7 +239,7 @@ public class Main {
             }
         }
 
-		File libDir = new File(buildDir, "deps");
+		File libDir = new File(fastBuildCache, "deps");
 		if (!libDir.exists()) {
 			libDir.mkdir();
 		}
