@@ -1,5 +1,6 @@
 package me.modmuss50.fastbuild;
 
+import com.google.common.base.Throwables;
 import com.google.gson.Gson;
 import me.modmuss50.fastbuild.buildScripts.BuildInfo;
 import me.modmuss50.fastbuild.mcForge.Library;
@@ -14,7 +15,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import java.io.*;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -49,10 +49,10 @@ public class Main {
         }
         tempsrc.mkdir();
         FileUtils.copyDirectory(sources, tempsrc);
-        if(resDir.exists()){
+        if (resDir.exists()) {
             FileUtils.copyDirectory(resDir, tempsrc);
         }
-        if(jarOut.exists()){
+        if (jarOut.exists()) {
             deleteFolder(jarOut);
         }
         jarOut.mkdir();
@@ -87,7 +87,7 @@ public class Main {
         }
         ZipUtil.pack(outputDir, devJar);
 
-        if(info.uniJar){
+        if (info.uniJar) {
             File releaseJar = new File(jarOut, info.projectName + "-" + info.version + "-univseral.jar");
             if (releaseJar.exists()) {
                 releaseJar.delete();
@@ -101,11 +101,11 @@ public class Main {
         }
 
         File srcJar = new File(jarOut, info.projectName + "-" + info.version + "-src.jar");
-        if(srcJar.exists()){
+        if (srcJar.exists()) {
             srcJar.delete();
         }
 
-        if(info.srcJar){
+        if (info.srcJar) {
             ZipUtil.pack(tempsrc, srcJar);
         }
 
@@ -134,7 +134,7 @@ public class Main {
 
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
-        if(outputDir.exists()){
+        if (outputDir.exists()) {
             deleteFolder(outputDir);
         }
         outputDir.mkdir();
@@ -166,12 +166,12 @@ public class Main {
         }
 
         File filestore = new File(gradledir, "caches/artifacts-24/filestore");
-        if(!filestore.exists()){
-            if(new File(gradledir, "caches/modules-2/files-2.1").exists()){
+        if (!filestore.exists()) {
+            if (new File(gradledir, "caches/modules-2/files-2.1").exists()) {
                 filestore = new File(gradledir, "caches");
             } else {
                 filestore = new File(gradledir, "caches");
-                if(!filestore.exists()){
+                if (!filestore.exists()) {
                     System.out.println("Could not find Gradle caches folder!");
                     System.exit(1);
                 } else {
@@ -267,9 +267,9 @@ public class Main {
 
         String libarg = "";
         File forgeSrc = new File(forgeDir, "forgeSrc-" + forgeIdentifyer + ".jar");
-        if(!forgeSrc.exists()){
+        if (!forgeSrc.exists()) {
             forgeSrc = new File(forgeDir, "forgeBin-" + forgeIdentifyer + ".jar");
-            if(!forgeSrc.exists()){
+            if (!forgeSrc.exists()) {
                 System.out.println("You need to setup gradle!");
                 System.exit(1);
             }
@@ -296,8 +296,53 @@ public class Main {
         System.out.println("Starting build");
         //System.out.println(builder.toString());
         if (!BatchCompiler.compile(builder.toString(), new PrintWriter(System.out), new PrintWriter(System.out), progress)) {
+
             System.out.println("Failed to build");
             System.exit(1);
+        }
+
+    }
+
+    public static int runProcess(File workDir, List<String> command) throws Exception {
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.directory(workDir);
+        pb.environment().put("JAVA_HOME", System.getProperty("java.home"));
+
+        final Process ps = pb.start();
+
+        new Thread(new StreamRedirector(ps.getInputStream(), System.out)).start();
+        new Thread(new StreamRedirector(ps.getErrorStream(), System.err)).start();
+
+        int status = ps.waitFor();
+
+        if (status != 0) {
+            throw new RuntimeException("Error running command, return status !=0: " + command.toString());
+        }
+
+        return status;
+    }
+
+    private static class StreamRedirector implements Runnable {
+
+        private final InputStream in;
+        private final PrintStream out;
+
+        public StreamRedirector(InputStream in, PrintStream out) {
+            this.in = in;
+            this.out = out;
+        }
+
+        @Override
+        public void run() {
+            BufferedReader br = new BufferedReader(new InputStreamReader(in));
+            try {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    out.println(line);
+                }
+            } catch (IOException ex) {
+                throw Throwables.propagate(ex);
+            }
         }
     }
 }
