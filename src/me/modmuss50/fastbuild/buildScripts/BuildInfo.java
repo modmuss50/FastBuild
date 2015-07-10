@@ -5,14 +5,14 @@ import me.modmuss50.fastbuild.mcForge.Library;
 import java.util.List;
 
 public class BuildInfo {
-    public String projectName;
-    public String version;
+	public String projectName;
+	public String version;
 
-    public String forgeVersion;
+	public String forgeVersion;
 
-    public List<Library> libraries;
+	public List<Library> libraries;
 
-    public boolean devJar;
-    public boolean srcJar;
-    public boolean uniJar = true;
+	public boolean devJar;
+	public boolean srcJar;
+	public boolean uniJar = true;
 }
