@@ -133,7 +133,14 @@ public class RebofUtils {
 		MinecraftNameSet refNS = new MinecraftNameSet(MinecraftNameSet.Type.MCP, side, mcVer);
 		HashMap refCCList = new HashMap();
 		File[] inputCC;
-		int inputNS = (inputCC = new File[]{new File(forgeDir, "forgeSrc-" + forgeVer + ".jar")}).length;
+        File forgeFile = new File(forgeDir, "forgeSrc-" + forgeVer + ".jar");
+        if(!forgeFile.exists()){
+            forgeFile = new File(forgeDir, "forgeBin-" + forgeVer + ".jar");
+            if(!forgeFile.exists()){
+                System.out.println("Could not find a valid forge jar to build with.");
+            }
+        }
+		int inputNS = (inputCC = new File[]{forgeFile}).length;
 
 		for (int inputType = 0; inputType < inputNS; ++inputType) {
 			File remapTo = inputCC[inputType];
