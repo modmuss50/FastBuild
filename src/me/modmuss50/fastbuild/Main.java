@@ -274,11 +274,16 @@ public class Main {
                 System.exit(1);
             }
         }
-        libarg = libarg + forgeSrc.getCanonicalPath() + ";";
+
+		String seperator = ":";
+		if(System.getProperty("os.name").startsWith("Windows")){
+			seperator = ";";
+		}
+        libarg = libarg + forgeSrc.getCanonicalPath() + seperator;
         for (File lib : libs) {
-            libarg = libarg + lib.getCanonicalPath() + ";";
+            libarg = libarg + lib.getCanonicalPath() + seperator;
         }
-        if (libarg.length() > 0 && libarg.charAt(libarg.length() - 1) == ';') {
+        if (libarg.length() > 0 && libarg.charAt(libarg.length() - 1) == seperator.toCharArray()[0]) {
             libarg = libarg.substring(0, libarg.length() - 1);
         }
         commandargs.add(libarg);
