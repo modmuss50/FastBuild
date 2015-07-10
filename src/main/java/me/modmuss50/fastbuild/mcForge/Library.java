@@ -1,8 +1,8 @@
 package me.modmuss50.fastbuild.mcForge;
 
 public class Library {
-	public String name;
-	public String url;
-	public boolean disableSSLCert = false;
+    public String name;
+    public String url;
+    public boolean disableSSLCert = false;
     public boolean copyToJar = false;
 }

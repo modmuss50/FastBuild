@@ -5,6 +5,6 @@ import java.util.List;
 
 public class Version {
 
-	public List<Library> libraries;
+    public List<Library> libraries;
 
 }
