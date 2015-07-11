@@ -1,7 +1,6 @@
 package me.modmuss50.fastbuild;
 
 import com.google.gson.Gson;
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import me.modmuss50.fastbuild.buildScripts.BuildInfo;
 import me.modmuss50.fastbuild.mcForge.Library;
 import me.modmuss50.fastbuild.mcForge.Version;
