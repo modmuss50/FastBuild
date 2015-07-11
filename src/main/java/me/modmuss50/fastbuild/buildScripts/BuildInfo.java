@@ -18,4 +18,6 @@ public class BuildInfo {
     public boolean devJar;
     public boolean srcJar;
     public boolean uniJar = true;
+    public boolean apiJar = false;
+    public String apiPackage;
 }

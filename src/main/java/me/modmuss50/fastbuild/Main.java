@@ -1,6 +1,7 @@
 package me.modmuss50.fastbuild;
 
 import com.google.gson.Gson;
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import me.modmuss50.fastbuild.buildScripts.BuildInfo;
 import me.modmuss50.fastbuild.mcForge.Library;
 import me.modmuss50.fastbuild.mcForge.Version;
@@ -149,6 +150,34 @@ public class Main {
 
         if (info.srcJar) {
             ZipUtil.pack(tempsrc, srcJar);
+        }
+
+        if(info.apiJar){
+            System.out.println("Making api jar");
+            if(info.apiPackage == ""){
+                throw new Exception("Api Package cannot be empty");
+            }
+            File apiTemp = new File(jarOut, "api");
+            if(apiTemp.exists()){
+                deleteFolder(apiTemp);
+            }
+            apiTemp.mkdir();
+            String packagePath = info.apiPackage;
+            File apiPackage = new File(apiTemp, packagePath);
+            apiPackage.mkdir();
+            File apiSource = new File(sources, packagePath);
+            if(!apiSource.exists()){
+                throw new Exception("Could not find the sources for the api");
+            }
+            File apiClasses = new File(outputDir, packagePath);
+            if(!apiClasses.exists()){
+                throw new Exception("Could not find the compiled java code for the api");
+            }
+            FileUtils.copyDirectory(apiSource, apiPackage);
+            FileUtils.copyDirectory(apiClasses, apiPackage);
+            File apiZip = new File(jarOut, info.projectName + "-" + info.version + "-api.jar");
+            ZipUtil.pack(apiTemp, apiZip);
+            deleteFolder(apiTemp);
         }
 
         deleteFolder(tempsrc);
