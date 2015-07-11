@@ -2,7 +2,7 @@
   "projectName": "FastBuild",
   "version": "0.1.%BUILD%",
   "bytecodeVersion": "1.8",
-  "useForge": false,
+  "useFoge": false,
   "libraries": [
     {
       "name": "BON.jar",
