@@ -44,7 +44,6 @@ public class FastBuild {
             Library library = new Library();
             library.name = "modDev.jar";
             library.url = "http://somesite.com/modDev.jar";
-            library.disableSSLCert = false;
             info.libraries = new ArrayList<>();
             info.libraries.add(library);
             info.devJar = true;
