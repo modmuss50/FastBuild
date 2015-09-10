@@ -1,12 +1,12 @@
 {
   "projectName": "FastBuild",
-  "version": "0.1.%BUILD%",
+  "version": "0.2.%BUILD%",
   "bytecodeVersion": "1.8",
   "useForge": false,
   "libraries": [
     {
-      "name": "BON.jar",
-      "url": "https://dl.dropbox.com/u/2944265/mods/BON.jar",
+      "name": "BON-2.2.2-bin.jar",
+      "url": "https://github.com/Parker8283/BON2/releases/download/2.2.2/BON-2.2.2-bin.jar",
       "copyToJar": true
     },
     {
@@ -37,6 +37,21 @@
     {
       "name": "zt-zip-1.8.jar",
       "url": "http://central.maven.org/maven2/org/zeroturnaround/zt-zip/1.8/zt-zip-1.8.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "asm-debug-all-5.0.4.jar",
+      "url": "http://central.maven.org/maven2/org/ow2/asm/asm-debug-all/5.0.4/asm-debug-all-5.0.4.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "guava-18.0.jar",
+      "url": "http://central.maven.org/maven2/com/google/guava/guava/18.0/guava-18.0.jar",
+      "copyToJar": true
+    },
+    {
+      "name": "jopt-simple-4.9.jar",
+      "url": "http://central.maven.org/maven2/net/sf/jopt-simple/jopt-simple/4.9/jopt-simple-4.9.jar",
       "copyToJar": true
     }
   ],

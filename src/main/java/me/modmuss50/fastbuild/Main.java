@@ -73,6 +73,9 @@ public class Main {
             System.out.println("Could not find sources!");
             return;
         }
+        if (tempsrc.exists()) {
+            deleteFolder(tempsrc);
+        }
         tempsrc.mkdir();
         FileUtils.copyDirectory(sources, tempsrc);
         if (resDir.exists()) {
@@ -151,13 +154,13 @@ public class Main {
             ZipUtil.pack(tempsrc, srcJar);
         }
 
-        if(info.apiJar){
+        if (info.apiJar) {
             System.out.println("Making api jar");
-            if(info.apiPackage == ""){
+            if (info.apiPackage == "") {
                 throw new Exception("Api Package cannot be empty");
             }
             File apiTemp = new File(jarOut, "api");
-            if(apiTemp.exists()){
+            if (apiTemp.exists()) {
                 deleteFolder(apiTemp);
             }
             apiTemp.mkdir();
@@ -165,11 +168,11 @@ public class Main {
             File apiPackage = new File(apiTemp, packagePath);
             apiPackage.mkdir();
             File apiSource = new File(sources, packagePath);
-            if(!apiSource.exists()){
+            if (!apiSource.exists()) {
                 throw new Exception("Could not find the sources for the api");
             }
             File apiClasses = new File(outputDir, packagePath);
-            if(!apiClasses.exists()){
+            if (!apiClasses.exists()) {
                 throw new Exception("Could not find the compiled java code for the api");
             }
             FileUtils.copyDirectory(apiSource, apiPackage);
@@ -345,7 +348,12 @@ public class Main {
         }
 
         for (File lib : libFiles) {
-            libarg.append(lib.getAbsolutePath() + seperator);
+            if (lib.exists()) {
+                libarg.append(lib.getAbsolutePath() + seperator);
+            } else {
+                System.out.println("Could not find lib, will still try and compile");
+            }
+
         }
         commandargs.add(libarg.toString());
 

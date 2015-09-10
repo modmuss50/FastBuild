@@ -11,11 +11,15 @@ import java.util.ArrayList;
 public class FastBuild {
 
     public static boolean isJenkins = false;
+    public static boolean isOffline = false;
 
     public static void main(String[] args) throws Throwable {
         for (String arg : args) {
             if (arg.endsWith("-jenkins")) {
                 isJenkins = true;
+            }
+            if (arg.endsWith("-offline")) {
+                isOffline = true;
             }
         }
         Main main = new Main();
