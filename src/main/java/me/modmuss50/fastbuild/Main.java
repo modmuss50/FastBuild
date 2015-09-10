@@ -281,39 +281,6 @@ public class Main {
                 if (!lib.exists()) {
                     System.out.println("Downloading library " + library.name);
                     try {
-                        if (library.disableSSLCert && hasFixedHttps == false) {
-                            System.out.println("One or more libFiles has asked to disable ssl!!!");
-                            /**
-                             * This should only be used if you know what you are doing
-                             */
-                            //TODO find a better way of doing this, this is BAD!!!
-                            final TrustManager[] trustAllCertificates = new TrustManager[]{
-                                    new X509TrustManager() {
-                                        @Override
-                                        public X509Certificate[] getAcceptedIssuers() {
-                                            return null; // Not relevant.
-                                        }
-
-                                        @Override
-                                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                                            // Do nothing. Just allow them all.
-                                        }
-
-                                        @Override
-                                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                                            // Do nothing. Just allow them all.
-                                        }
-                                    }
-                            };
-
-                            try {
-                                SSLContext sc = SSLContext.getInstance("SSL");
-                                sc.init(null, trustAllCertificates, new SecureRandom());
-                                HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
-                            } catch (GeneralSecurityException e) {
-                                throw new ExceptionInInitializerError(e);
-                            }
-                        }
                         FileUtils.copyURLToFile(new URL(library.url), lib);
                     } catch (IOException e) {
                         System.out.println("Failed to download a library!");
