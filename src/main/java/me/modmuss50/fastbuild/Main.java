@@ -87,7 +87,7 @@ public class Main {
             System.out.println("Copying the resources!");
             FileUtils.copyDirectory(resDir, outputDir);
         }
-        
+
         for (Library library : info.libraries) {
             if (library.copyToJar) {
                 for (File libFile : libFiles) {
@@ -268,12 +268,14 @@ public class Main {
         if (!libDir.exists()) {
             libDir.mkdir();
         }
-        boolean hasFixedHttps = false;
         if (info.libraries.size() != 0) {
             for (Library library : info.libraries) {
                 File lib = new File(libDir, library.name);
                 if (!lib.exists()) {
                     System.out.println("Downloading library " + library.name);
+                    if(FastBuild.isModmussJenkins){
+                        library.url = library.url.replace("http://modmuss50.me", "localhost");
+                    }
                     try {
                         FileUtils.copyURLToFile(new URL(library.url), lib);
                     } catch (IOException e) {
