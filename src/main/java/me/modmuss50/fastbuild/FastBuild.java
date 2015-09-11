@@ -7,6 +7,7 @@ import me.modmuss50.fastbuild.mcForge.Library;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class FastBuild {
 
@@ -15,6 +16,14 @@ public class FastBuild {
     public static boolean isModmussJenkins = false;
 
     public static void main(String[] args) throws Throwable {
+        List<String> strings = new ArrayList<>();
+        for(String arg : args){
+            strings.add(arg);
+        }
+        main(strings);
+    }
+
+    public static void main(List<String> args) throws Throwable {
         for (String arg : args) {
             if (arg.endsWith("-jenkins")) {
                 isJenkins = true;
