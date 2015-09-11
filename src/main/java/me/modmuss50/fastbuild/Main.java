@@ -274,7 +274,7 @@ public class Main {
                 if (!lib.exists()) {
                     System.out.println("Downloading library " + library.name);
                     if(FastBuild.isModmussJenkins){
-                        library.url = library.url.replace("http://modmuss50.me", "localhost");
+                        library.url = library.url.replace("modmuss50.me", "localhost");
                     }
                     try {
                         FileUtils.copyURLToFile(new URL(library.url), lib);
