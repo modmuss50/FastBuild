@@ -125,8 +125,9 @@ public class Main {
             if (releaseJar.exists()) {
                 releaseJar.delete();
             }
+            copyFile(devJar, releaseJar);
 
-            RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer);
+            RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer, this, libFiles);
         }
 
         if (!info.useForge) {
@@ -331,4 +332,23 @@ public class Main {
             throw new Exception("Failed to build");
         }
     }
+
+    private  void copyFile(File srcFile, File destFile) throws IOException
+    {
+        InputStream oInStream = new FileInputStream(srcFile);
+        OutputStream oOutStream = new FileOutputStream(destFile);
+
+        // Transfer bytes from in to out
+        byte[] oBytes = new byte[1024];
+        int nLength;
+        BufferedInputStream oBuffInputStream =
+                new BufferedInputStream( oInStream );
+        while ((nLength = oBuffInputStream.read(oBytes)) > 0)
+        {
+            oOutStream.write(oBytes, 0, nLength);
+        }
+        oInStream.close();
+        oOutStream.close();
+    }
 }
+

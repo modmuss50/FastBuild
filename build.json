@@ -5,8 +5,8 @@
   "useForge": false,
   "libraries": [
     {
-      "name": "BON-2.2.2-bin.jar",
-      "url": "https://github.com/Parker8283/BON2/releases/download/2.2.2/BON-2.2.2-bin.jar",
+      "name": "SpecialSource-1.7.3.jar",
+      "url": "http://central.maven.org/maven2/net/md-5/SpecialSource/1.7.3/SpecialSource-1.7.3.jar",
       "copyToJar": true
     },
     {
