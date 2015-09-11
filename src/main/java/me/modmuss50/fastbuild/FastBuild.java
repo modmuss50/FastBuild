@@ -25,6 +25,9 @@ public class FastBuild {
             if (arg.endsWith("-modmuss50Jenkins")) {
                 isModmussJenkins = true;
             }
+            if(arg.startsWith("-wrapper_")){
+                System.out.println("Stared from wrapper " + arg.split("_")[1]);
+            }
         }
         Main main = new Main();
         File buildinfo = new File("build.json");
