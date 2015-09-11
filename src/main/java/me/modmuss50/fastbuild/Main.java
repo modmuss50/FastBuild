@@ -87,7 +87,7 @@ public class Main {
             System.out.println("Copying the resources!");
             FileUtils.copyDirectory(resDir, outputDir);
         }
-
+        
         for (Library library : info.libraries) {
             if (library.copyToJar) {
                 for (File libFile : libFiles) {

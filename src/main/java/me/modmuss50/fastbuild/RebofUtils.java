@@ -15,13 +15,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 
 public class RebofUtils {
-
-    private LinkedList<String> extraSrg = new LinkedList<String>();
 
     public static void rebofJar(File dev, File output, String forgeinfo, Main main, List<File> files) throws Throwable {
         File homeDir = new File(System.getProperty("user.home"));
@@ -59,53 +56,39 @@ public class RebofUtils {
         exceptor.buildSrg(srg, outSrg);
 
         srg = outSrg;
-
         BufferedWriter writer = new BufferedWriter(new FileWriter(srg, true));
         writer.flush();
         writer.close();
-
         obfuscate(dev, files, srg, output);
-
     }
 
-    private static void obfuscate(File inJar, List<File> files, File srg, File output) throws FileNotFoundException, IOException
-    {
-        // load mapping
+    private static void obfuscate(File inJar, List<File> files, File srg, File output) throws IOException {
         JarMapping mapping = new JarMapping();
         mapping.loadMappings(Files.newReader(srg, Charset.defaultCharset()), null, null, false);
-
-        // make remapper
         JarRemapper remapper = new JarRemapper(null, mapping);
-
-        // load jar
         Jar input = Jar.init(inJar);
-
-        // ensure that inheritance provider is used
         JointProvider inheritanceProviders = new JointProvider();
         inheritanceProviders.add(new JarProvider(input));
-
-        if (!files.isEmpty())
+        if (!files.isEmpty()){
             inheritanceProviders.add(new ClassLoaderProvider(new URLClassLoader(toUrls(files))));
-
+        }
         mapping.setFallbackInheritanceProvider(inheritanceProviders);
-
         File out = output;
-        if (!out.getParentFile().exists()) //Needed because SS doesn't create it.
+        if (!out.getParentFile().exists())
         {
             out.getParentFile().mkdirs();
         }
-
-        // remap jar
         remapper.remapJar(input, output);
     }
 
     public static URL[] toUrls(List<File> files) throws MalformedURLException
     {
         ArrayList<URL> urls = new ArrayList<URL>();
-
-        for (File file : files)
-            urls.add(file.toURI().toURL());
-
+        for (File file : files){
+            if(file.exists()){
+                urls.add(file.toURI().toURL());
+            }
+        }
         return urls.toArray(new URL[urls.size()]);
     }
 
