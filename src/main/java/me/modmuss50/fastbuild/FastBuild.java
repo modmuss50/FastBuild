@@ -20,10 +20,10 @@ public class FastBuild {
         for(String arg : args){
             strings.add(arg);
         }
-        main(strings);
+        start(strings);
     }
 
-    public static void main(List<String> args) throws Throwable {
+    public static void start(List<String> args) throws Throwable {
         for (String arg : args) {
             if (arg.endsWith("-jenkins")) {
                 isJenkins = true;
