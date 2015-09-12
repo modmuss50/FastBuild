@@ -59,5 +59,8 @@
     "Manifest-Version: 1.0",
     "Main-Class: me.modmuss50.fastbuild.FastBuild"
   ],
+    "versionStrings": [
+    "%VERSION%"
+  ],
   "srcJar": true
 }
