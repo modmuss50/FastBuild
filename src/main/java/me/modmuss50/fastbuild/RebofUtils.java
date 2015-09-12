@@ -29,7 +29,7 @@ public class RebofUtils {
             System.out.println("Could not find conf folder, something bad will happen");
         }
 
-        File srg = new File(conf, "packaged.srg");
+        File srg = new File(forgeDir, "srgs/mcp-notch.srg");
         if (!srg.exists()) {
             System.out.println("Could not find mappings, bad things are about to happen");
         }

@@ -86,7 +86,6 @@ public class Main {
                 String content = new String(Files.readAllBytes(path), charset);
                 for(String string : info.versionStrings){
                     content = content.replaceAll(string, info.version);
-                    System.out.println(content);
                 }
 
                 Files.write(path, content.getBytes(charset));
