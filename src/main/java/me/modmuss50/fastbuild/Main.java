@@ -11,7 +11,10 @@ import org.zeroturnaround.zip.ZipUtil;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,6 +46,7 @@ public class Main {
     public void run(BuildInfo info) throws Throwable {
         this.forgeIdentifyer = info.forgeVersion;
         Instant start = Instant.now();
+        File runDir = new File(".");
         File buildDir = new File("build");
         File outputDir = new File(buildDir, "outputs");
         File tempsrc = new File(buildDir, "tempsrc");
@@ -71,6 +75,25 @@ public class Main {
         }
         tempsrc.mkdir();
         FileUtils.copyDirectory(sources, tempsrc);
+        if(info.versionStrings != null || !info.versionStrings.isEmpty()){
+            ArrayList<File> filesToScanAndCopy = new ArrayList<>();
+            ArrayList<File> filesToCopy = new ArrayList<>();
+            listFilesAndSub(tempsrc, filesToScanAndCopy, filesToCopy);
+            for(File source : filesToScanAndCopy){
+                System.out.println(source.getAbsolutePath().replace(runDir.getAbsolutePath(), ""));
+                Path path = Paths.get(source.getAbsolutePath().replace(runDir.getAbsolutePath(), ""));
+                Charset charset = StandardCharsets.UTF_8;
+
+                String content = new String(Files.readAllBytes(path), charset);
+                for(String string : info.versionStrings){
+                    content = content.replaceAll(string, info.version);
+                    System.out.println(content);
+                }
+
+                Files.write(path, content.getBytes(charset));
+            }
+        }
+
         if (resDir.exists()) {
             FileUtils.copyDirectory(resDir, tempsrc);
         }
@@ -351,6 +374,21 @@ public class Main {
         }
         oInStream.close();
         oOutStream.close();
+    }
+
+    public void listFilesAndSub(File start, ArrayList<File> sources, ArrayList<File> resources){
+        File[] flist = start.listFiles();
+        for(File file : flist){
+            if(file.isFile()){
+                if(file.getName().endsWith(".png") || file.getName().endsWith(".class") || file.getName().endsWith(".jar")){
+                    resources.add(file);
+                } else {
+                    sources.add(file);
+                }
+            } else if(file.isDirectory()){
+                listFilesAndSub(file, sources, resources);
+            }
+        }
     }
 }
 

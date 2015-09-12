@@ -14,6 +14,7 @@ public class BuildInfo {
     public List<Library> libraries;
     public String bytecodeVersion = "1.7";
     public List<String> manifest;
+    public List<String> versionStrings;
 
     public boolean devJar;
     public boolean srcJar;
