@@ -80,7 +80,6 @@ public class Main {
             ArrayList<File> filesToCopy = new ArrayList<>();
             listFilesAndSub(tempsrc, filesToScanAndCopy, filesToCopy);
             for(File source : filesToScanAndCopy){
-                System.out.println(source.getAbsolutePath().replace(runDir.getAbsolutePath(), ""));
                 Path path = Paths.get(source.getAbsolutePath().replace(runDir.getAbsolutePath(), ""));
                 Charset charset = StandardCharsets.UTF_8;
 

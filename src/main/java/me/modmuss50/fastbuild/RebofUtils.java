@@ -24,13 +24,14 @@ public class RebofUtils {
         File homeDir = new File(System.getProperty("user.home"));
         File gradledir = new File(homeDir, ".gradle");
         File forgeDir = new File(gradledir, "caches/minecraft/net/minecraftforge/forge/" + forgeinfo);
-        File srg = new File(forgeDir, "srgs/mcp-srg.srg");
-        if (!srg.exists()) {
-            System.out.println("Could not find mappings, bad things are about to happen");
-        }
         File conf = new File(forgeDir, "unpacked/conf");
         if(!conf.exists()){
             System.out.println("Could not find conf folder, something bad will happen");
+        }
+
+        File srg = new File(conf, "packaged.srg");
+        if (!srg.exists()) {
+            System.out.println("Could not find mappings, bad things are about to happen");
         }
 
         File exc = new File(conf, "packaged.exc");
