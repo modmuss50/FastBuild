@@ -43,7 +43,7 @@ public class Main {
         folder.delete();
     }
 
-    public void run(BuildInfo info) throws Throwable {
+    public void run(BuildInfo info) throws Exception {
         this.forgeIdentifyer = info.forgeVersion;
         Instant start = Instant.now();
         File runDir = new File(".");
@@ -75,6 +75,7 @@ public class Main {
         }
         tempsrc.mkdir();
         FileUtils.copyDirectory(sources, tempsrc);
+        System.out.println("Remapping text");
         if(info.versionStrings != null || !info.versionStrings.isEmpty()){
             ArrayList<File> filesToScanAndCopy = new ArrayList<>();
             ArrayList<File> filesToCopy = new ArrayList<>();
@@ -100,7 +101,11 @@ public class Main {
         }
         jarOut.mkdir();
 
-        compileJavaFile(info);
+        try {
+            compileJavaFile(info);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         System.out.println("Creating jar's file");
 
@@ -148,7 +153,11 @@ public class Main {
             }
             copyFile(devJar, releaseJar);
 
-            RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer, this, libFiles);
+            try {
+                RebofUtils.rebofJar(devJar, releaseJar, forgeIdentifyer, this, libFiles);
+            } catch (Throwable throwable) {
+                throwable.printStackTrace();
+            }
         }
 
         if (!info.useForge) {
